@@ -55,18 +55,12 @@ class String implements IteratorAggregate, ArrayAccess {
 
 
   /**
-   * @param String $value
+   * @param string|String $value
    * @param string $encoding 
    */
   public function __construct($value = null, $encoding = null) {
     if(null !== $value) {
-      if(is_string($value)) {
-        $this->setValue($value);
-      } elseif($value instanceof String) {
-        $this->setValue($value->getValue());
-      } else {
-        throw new StringException('Invalid value given: ' . $value);
-      }
+      $this->setValue($value);
     }
     
     if(null === $encoding) {
@@ -83,11 +77,18 @@ class String implements IteratorAggregate, ArrayAccess {
   }
 
   /**
-   * @param string
+   * @param string|String
    * @return String
    */
   public function setValue($value) {   
-    $this->value = $value;
+    if(is_string($value)) {
+      $this->value = $value;
+    } elseif($value instanceof String) {
+      $this->value = $value->getValue();
+    } else {
+      throw new StringException('Invalid value given: ' . $value);
+    }
+
     return $this;
   }
   
@@ -170,7 +171,7 @@ class String implements IteratorAggregate, ArrayAccess {
   /**
    * Set character at a given position
    * @param int $offset
-   * @param string $char
+   * @param string|String $char
    * @return String 
    */
   public function offsetSet($offset, $char) {
@@ -221,7 +222,7 @@ class String implements IteratorAggregate, ArrayAccess {
   
   /**
    * Insert a string into the current string. Use the third parameter to overwrite following characters
-   * @param string $string
+   * @param string|String $string
    * @param int $offset
    * @param bool $overwrite
    * @return String 
@@ -251,7 +252,7 @@ class String implements IteratorAggregate, ArrayAccess {
   
   /**
    * Append a string at the end of the current string
-   * @param string $string
+   * @param string|String $string
    * @return String 
    */
   public function append($string) {
@@ -290,7 +291,7 @@ class String implements IteratorAggregate, ArrayAccess {
 
   /**
    * @param int $padLength
-   * @param string $padString
+   * @param string|String $padString
    * @param int $padType
    * @return string
    */
@@ -307,7 +308,7 @@ class String implements IteratorAggregate, ArrayAccess {
   /**
    * Pad the string from the left side using the given character
    * @param int $padLength
-   * @param string $padString
+   * @param string|String $padString
    * @return String 
    */
   public function lpad($padLength, $padString = ' ') {
@@ -318,12 +319,37 @@ class String implements IteratorAggregate, ArrayAccess {
   /**
    * Pad the string from the right side using the given character
    * @param int $padLength
-   * @param string $padString
+   * @param string/String $padString
    * @return String 
    */
   public function rpad($padLength, $padString = ' ') {
     $this->setValue($this->pad($padLength, $padString, STR_PAD_RIGHT));
     return $this;
+  }
+  
+  /**
+   *
+   * @param string|String $string
+   * @param int $offset
+   * @return bool 
+   */
+  public function startsWith($string, $offset = 0) {
+    $this->checkOffset($offset);
+    return mb_substr($this->getValue(), $offset, mb_strlen($string), $this->getEncoding()) == $string;
+  }
+  
+  /**
+   *
+   * @param string|String $string
+   * @return bool 
+   */
+  public function endsWith($string) {
+    return mb_substr(
+      $this->getValue(), 
+      $this->getLength() - mb_strlen($string), 
+      $this->getLength(), //String cannot be longer than this
+      $this->getEncoding()
+    ) == $string;
   }
   
   /**
@@ -345,7 +371,7 @@ class String implements IteratorAggregate, ArrayAccess {
   /**
    * Create a new String object using a certain encoding. Use this function for smaller code (see example)
    * @example String::factory('test')->method1()->method2()->getValue(); instead of $s = new String('test')...
-   * @param string $value
+   * @param string|String $value
    * @param string $encoding
    * @return String 
    */
