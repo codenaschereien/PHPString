@@ -84,8 +84,9 @@ final class StringIterator implements Iterator {
    * @return string 
    */
   public function next() {
+    $current = $this->current();
     $this->setPosition($this->getPosition() + 1);
-    return $this->current();
+    return $current;
   }
 
   /**
