@@ -36,6 +36,21 @@ class String implements IteratorAggregate, ArrayAccess {
   const DEFAULT_ENCODING = 'UTF-8';
   
   /**
+   * @const string
+   */
+  const LINE_ENDING_N = "\n";
+  
+  /**
+   * @const string
+   */
+  const LINE_ENDING_RN = "\r\n";
+  
+  /**
+   * @const string
+   */
+  const LINE_ENDING_R = "\r";
+  
+  /**
    * Stores the real string value.
    * @var string 
    */
@@ -350,6 +365,53 @@ class String implements IteratorAggregate, ArrayAccess {
       $this->getLength(), //String cannot be longer than this
       $this->getEncoding()
     ) == $string;
+  }
+  
+  /**
+   * Detects line endings by counting the most used line ending
+   * @param string $str
+   * @param string $encoding for $str (e.g. UTF-8)
+   * @return string e.g \n
+   */
+  public function detectLineBreaks() {
+    $ret = "\r\n";
+    $encoding = $this->getEncoding();
+
+    $backslashRNCount = mb_substr_count($this->__toString(), "\r\n", $encoding);
+    $backslashRCount = mb_substr_count($this->__toString(), "\r", $encoding) - $backslashRNCount;
+    $backslashNCount = mb_substr_count($this->__toString(), "\n", $encoding) - $backslashRNCount;
+    
+    if($backslashRCount > $backslashNCount && $backslashRCount > $backslashRNCount) {
+      $ret = "\r";
+    } elseif($backslashNCount > $backslashRCount && $backslashNCount > $backslashRNCount) {
+      $ret = "\n";
+    }
+
+    return $ret;
+  }
+  
+  /**
+   * Normalize Line endings to a given line ending.
+   * @param string $lineEnding
+   * @return String
+   */
+  public function normalizeLineBreaks($lineEnding = self::LINE_ENDING_N) {
+    switch($lineEnding) {
+      case self::LINE_ENDING_N:
+        $this->setValue(str_replace(self::LINE_ENDING_RN, self::LINE_ENDING_N, $this->getValue()));
+        $this->setValue(str_replace(self::LINE_ENDING_R, self::LINE_ENDING_N, $this->getValue()));
+        break;
+      case self::LINE_ENDING_R:
+        $this->setValue(str_replace(self::LINE_ENDING_RN, self::LINE_ENDING_R, $this->getValue()));
+        $this->setValue(str_replace(self::LINE_ENDING_N, self::LINE_ENDING_R, $this->getValue()));
+        break;
+      case self::LINE_ENDING_RN:
+        $this->setValue(str_replace(self::LINE_ENDING_RN, self::LINE_ENDING_N, $this->getValue()));
+        $this->setValue(str_replace(self::LINE_ENDING_R, self::LINE_ENDING_N, $this->getValue()));
+        $this->setValue(str_replace(self::LINE_ENDING_N, self::LINE_ENDING_RN, $this->getValue()));
+        break;
+    }
+    return $this;
   }
   
   /**
