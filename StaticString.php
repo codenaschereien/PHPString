@@ -5,7 +5,7 @@ require_once('String.php');
 /**
  * @author Martin Will
  */
-class StaticString {
+abstract class StaticString {
   
   /**
    * Create a new String object and call a method on it
