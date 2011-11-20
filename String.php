@@ -145,7 +145,7 @@ class String implements IteratorAggregate, ArrayAccess {
    * @return bool 
    */
   public function offsetExists($offset) {
-    return $this->offsetExistsExtended($offset);
+    return $this->offsetExistsExtended($offset, self::OFFSET_NORMAL);
   }
 
   /**
@@ -156,7 +156,7 @@ class String implements IteratorAggregate, ArrayAccess {
    * @return String 
    */
   private function offsetExistsExtended($offset, $byteCorrection = self::OFFSET_NORMAL) {
-    return ctype_digit("$offset") && $offset >= 0 && ($offset < $this->getLength() + $byteCorrection);
+    return ctype_digit("$offset") && $offset >= 0 && ($offset <= $this->getLength() + $byteCorrection);
   }
   
   /**
@@ -219,18 +219,19 @@ class String implements IteratorAggregate, ArrayAccess {
   public function offsetUnset($offset) {
     $this->checkOffset($offset);
     $value = $this->getValue();
-
+    $prefix = $postfix = '';
+    
     if(0 == $offset) {
       $prefix = '';
-      $postfix = mb_substr($value, 1, null, $this->getEncoding()); ###########Achtung Kontrolle!!!!!!!!!!!!
+      $postfix = mb_substr($value, 1, mb_strlen($value) - 1, $this->getEncoding());
     } elseif($this->getLength() - 1 == $offset) {
       $prefix = mb_substr($value, 0, $offset, $this->getEncoding());
       $postfix = '';
     } else {
       $prefix = mb_substr($value, 0, $offset, $this->getEncoding());
-      $postfix = mb_substr($value, mb_strlen($prefix, $this->getEncoding()) + 1);
+      $postfix = mb_substr($value, $offset + 1, $this->getLength() - $offset, $this->getEncoding());
     }
-        
+
     $this->setValue($prefix . $postfix);
     return $this;
   }
@@ -308,16 +309,43 @@ class String implements IteratorAggregate, ArrayAccess {
    * @param int $padLength
    * @param string|String $padString
    * @param int $padType
-   * @return string
+   * @return String
    */
   private function pad($padLength, $padString =' ', $padType = STR_PAD_RIGHT) {
-    $value = $this->getValue();
-    return new String(str_pad(
-      $value, 
-      $padLength + strlen($value) - mb_strlen($value, $this->getEncoding())), 
-      $padString, 
-      $padType
-    );
+    $padCount = max(0, $padLength - $this->getLength());
+    if($padCount > 0) {
+      $value = $this->getValue();
+      $padding = '';
+      for($i = 0; $i < $padCount; $i++) {
+        $padding .= $padString;
+      }
+      
+      switch($padType) {
+        case STR_PAD_LEFT:
+          $value = $padding . $value;
+          break;
+        case STR_PAD_RIGHT:
+          $value = $value . $padding;
+          break;
+        case STR_PAD_BOTH:
+          $left = $right = '';
+          if($padCount % 2 == 0) {
+            $left = $right = mb_substr($padding, 0, $padCount / 2, $this->getEncoding());
+          } else {
+            $leftCount = floor($padCount / 2);
+            $left = mb_substr($padding, 0, $leftCount, $this->getEncoding());
+            $right = $left . $padString;
+          }
+          $value = $left . $value . $right;
+          break;
+        default:
+          throw new StringException('Invalid padType given: ' . $padType);
+          break;
+      }
+      $this->setValue($value);
+    }
+    
+    return $this;
   }
   
   /**
@@ -327,8 +355,17 @@ class String implements IteratorAggregate, ArrayAccess {
    * @return String 
    */
   public function lpad($padLength, $padString = ' ') {
-    $this->setValue($this->pad($padLength, $padString, STR_PAD_LEFT));
-    return $this;
+    return $this->pad($padLength, $padString, STR_PAD_LEFT);
+  }
+  
+  /**
+   *
+   * @param int $padLength
+   * @param string|String $padString
+   * @return String 
+   */
+  public function mpad($padLength, $padString = ' ') {
+    return $this->pad($padLength, $padString, STR_PAD_BOTH);
   }
   
   /**
@@ -338,8 +375,7 @@ class String implements IteratorAggregate, ArrayAccess {
    * @return String 
    */
   public function rpad($padLength, $padString = ' ') {
-    $this->setValue($this->pad($padLength, $padString, STR_PAD_RIGHT));
-    return $this;
+    return $this->pad($padLength, $padString, STR_PAD_RIGHT);
   }
   
   /**
@@ -350,7 +386,12 @@ class String implements IteratorAggregate, ArrayAccess {
    */
   public function startsWith($string, $offset = 0) {
     $this->checkOffset($offset);
-    return mb_substr($this->getValue(), $offset, mb_strlen($string), $this->getEncoding()) == $string;
+    return mb_substr(
+      $this->getValue(), 
+      $offset, 
+      mb_strlen($string, $this->getEncoding()), 
+      $this->getEncoding()
+    ) == $string;
   }
   
   /**
@@ -361,7 +402,7 @@ class String implements IteratorAggregate, ArrayAccess {
   public function endsWith($string) {
     return mb_substr(
       $this->getValue(), 
-      $this->getLength() - mb_strlen($string), 
+      $this->getLength() - mb_strlen($string, $this->getEncoding()), 
       $this->getLength(), //String cannot be longer than this
       $this->getEncoding()
     ) == $string;
@@ -414,6 +455,16 @@ class String implements IteratorAggregate, ArrayAccess {
     return $this;
   }
   
+  /**
+   * Inserts a line ending after a given number of characters, but does not break words.
+   * @param int $width max line width
+   * @param string $lineEnding line ending to use for inserts
+   * @return String
+   */
+  public function wordwrap($lineEnding = self::LINE_ENDING_N, $width=self::TXT_WIDTH) {
+    throw new StringException('Not implemented yet!');
+  }
+    
   /**
    * Set the default encoding which will automatically be set for each new String object.
    * @param string $encoding 
