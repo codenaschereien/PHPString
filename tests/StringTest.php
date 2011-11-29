@@ -14,13 +14,15 @@ class StringTest extends PHPUnit_Framework_TestCase {
    * @var String
    */
   protected $object;
+  
+  const TEST_STRING = 'This is a string!';
 
   /**
    * Sets up the fixture, for example, opens a network connection.
    * This method is called before a test is executed.
    */
   protected function setUp() {
-    $this->object = new String;
+    $this->object = new String(self::TEST_STRING);
   }
 
   /**
@@ -32,137 +34,137 @@ class StringTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testGetValue() {
-    $rawString = 'This is a string!';
-    $string = new String($rawString);
-    $this->assertInternalType('string', $string->getValue());
-    $this->assertEquals($rawString, $string->getValue());
+    $this->assertInternalType('string', $this->object->getValue());
+    $this->assertEquals(self::TEST_STRING, $this->object->getValue());
   }
 
   public function testSetValue() {
-    $rawString = 'This is a string!';
-    $string = new String();
-    $string->setValue($rawString);
-    $this->assertAttributeEquals($rawString, 'value', $string);
+    $rawString = 'Teststring!';
+    $this->object->setValue($rawString);
+    $this->assertAttributeEquals($rawString, 'value', $this->object);
   }
 
   public function testGetEncoding() {
     $encoding = 'UTF-8';
-    $string = new String('This is a string', $encoding);
-    $this->assertEquals($encoding, $string->getEncoding());
+    $this->object->setEncoding($encoding);
+    $this->assertEquals($encoding, $this->object->getEncoding());
   }
 
   public function testSetEncoding() {
-    $string = new String('This is a string');
-    $this->assertEquals($string->getDefaultEncoding(), $string->getEncoding());
+    $this->assertEquals($this->object->getDefaultEncoding(), $this->object->getEncoding());
   }
 
   public function testGetLength() {
-    $string = new String('öüä€test');
-    $this->assertFalse(0 === $string->getLength());
-    $this->assertFalse(7 === $string->getLength());
-    $this->assertEquals(8, $string->getLength());
+    $this->object->setValue('öüä€test');
+    $this->assertFalse(0 === $this->object->getLength());
+    $this->assertFalse(7 === $this->object->getLength());
+    $this->assertEquals(8, $this->object->getLength());
   }
 
   public function testGetIterator() {
-    $string = new String('This is a string');
-    $this->assertInstanceOf('Iterator', $string->getIterator());
+    $this->assertInstanceOf('Iterator', $this->object->getIterator());
   }
 
   public function testOffsetExists() {
-    $string = new String('öäü€test');
-    $this->assertTrue($string->offsetExists(0));
-    $this->assertTrue($string->offsetExists(7));
-    $this->assertFalse($string->offsetExists(8));
-    $this->assertFalse($string->offsetExists(-1));
+    $this->object->setValue('öäü€test');
+    $this->assertTrue($this->object->offsetExists(0));
+    $this->assertTrue($this->object->offsetExists(7));
+    $this->assertFalse($this->object->offsetExists(8));
+    $this->assertFalse($this->object->offsetExists(-1));
   }
 
   public function testOffsetGet() {
-    $string = new String('öäü€test');
-    $this->assertEquals('ö', $string->offsetGet(0));
-    $this->assertEquals('ä', $string->offsetGet(1));
-    $this->assertEquals('€', $string->offsetGet(3));
-    $this->assertEquals('t', $string->offsetGet(7));
+    $this->object->setValue('öäü€test');
+    $this->assertEquals('ö', $this->object->offsetGet(0));
+    $this->assertEquals('ä', $this->object->offsetGet(1));
+    $this->assertEquals('€', $this->object->offsetGet(3));
+    $this->assertEquals('t', $this->object->offsetGet(7));
   }
 
   public function testOffsetSet() {
-    $string = new String('öäü€test');
-    $string->offsetSet(0, 'Ö');
-    $this->assertEquals('Ö', $string->offsetGet(0));
-    $string->offsetSet(1, 'Ä');
-    $this->assertEquals('Ä', $string->offsetGet(1));
-    $string->offsetSet(3, 'E');
-    $this->assertEquals('E', $string->offsetGet(3));
-    $string->offsetSet(7, 'T');
-    $this->assertEquals('T', $string->offsetGet(7));
+    $this->object->setValue('öäü€test');
+    $this->object->offsetSet(0, 'Ö');
+    $this->assertEquals('Ö', $this->object->offsetGet(0));
+    
+    $this->object->offsetSet(1, 'Ä');
+    $this->assertEquals('Ä', $this->object->offsetGet(1));
+    
+    $this->object->offsetSet(3, 'E');
+    $this->assertEquals('E', $this->object->offsetGet(3));
+    
+    $this->object->offsetSet(7, 'T');
+    $this->assertEquals('T', $this->object->offsetGet(7));
   }
 
   public function testOffsetUnset() {
-    $string = new String('öäü€test');
-    $string->offsetUnset(0);
-    $this->assertEquals('äü€test', $string->getValue());
+    $this->object->setValue('öäü€test');
+    $this->object->offsetUnset(0);
+    $this->assertEquals('äü€test', $this->object->getValue());
     
-    $string = new String('öäü€test');
-    $string->offsetUnset(3);
-    $this->assertEquals('öäütest', $string->getValue());
+    $this->object->setValue('öäü€test');
+    $this->object->offsetUnset(3);
+    $this->assertEquals('öäütest', $this->object->getValue());
     
-    $string = new String('öäü€test');
-    $string->offsetUnset(7);
-    $this->assertEquals('öäü€tes', $string->getValue());
+    $this->object->setValue('öäü€test');
+    $this->object->offsetUnset(7);
+    $this->assertEquals('öäü€tes', $this->object->getValue());
   }
 
-  public function testInsert() {
-    $string = new String('öäütest');
-    $this->assertEquals('€öäütest', $string->insert('€', 0)->getValue());
+  public function testInsertNoOverwrite() {
+    $this->object->setValue('öäütest');
+    $this->assertEquals('€öäütest', $this->object->insert('€', 0)->getValue());
     
-    $string = new String('öäütest');
-    $this->assertEquals('ö€äütest', $string->insert('€', 1)->getValue());
+    $this->object->setValue('öäütest');
+    $this->assertEquals('ö€äütest', $this->object->insert('€', 1)->getValue());
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäü€test', $string->insert('€', 3)->getValue());
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäü€test', $this->object->insert('€', 3)->getValue());
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäütes€t', $string->insert('€', 6)->getValue());
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäütes€t', $this->object->insert('€', 6)->getValue());
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäütest€', $string->insert('€', 7)->getValue());
-    
-    $string = new String('öäütest');
-    $this->assertEquals('€äütest', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäütest€', $this->object->insert('€', 7)->getValue());
+  }
+  
+  public function testInsertOverwrite() {
+    $this->object->setValue('öäütest');
+    $this->assertEquals('€äütest', $this->object->insert(
       '€', 
       0, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
     );
     
-    $string = new String('öäütest');
-    $this->assertEquals('ö€ütest', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('ö€ütest', $this->object->insert(
       '€', 
       1, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
     );
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäü€est', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäü€est', $this->object->insert(
       '€', 
       3, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
     );
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäütes€', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäütes€', $this->object->insert(
       '€', 
       6, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
     );
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäütest€', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäütest€', $this->object->insert(
       '€', 
       7, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
     );
     
-    $string = new String('öäütest');
-    $this->assertEquals('öäütes€€€', $string->insert(
+    $this->object->setValue('öäütest');
+    $this->assertEquals('öäütes€€€', $this->object->insert(
       '€€€', 
       6, 
       String::OVERWRITE_FOLLING_CHARACTERS)->getValue()
@@ -170,19 +172,19 @@ class StringTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testAppend() {
-    $string = new String('öäü€test');
-    $this->assertEquals('öäü€test€€€', $string->append('€€€'));
+    $this->object->setValue('öäü€test');
+    $this->assertEquals('öäü€test€€€', $this->object->append('€€€'));
   }
 
   public function testCountBytes() {
     //using one-, two- and three-byte letters
-    $string = new String('öäü€test');
-    $this->assertEquals(13, $string->countBytes());
+    $this->object->setValue('öäü€test');
+    $this->assertEquals(13, $this->object->countBytes());
   }
 
   public function testGetBytes() {
-    $string = new String('öäü€test');
-    $this->assertInternalType('array', $string->getBytes());
+    $this->object->setValue('öäü€test');
+    $this->assertInternalType('array', $this->object->getBytes());
     $bytes = array(
       chr(195),
       chr(182),
@@ -198,77 +200,79 @@ class StringTest extends PHPUnit_Framework_TestCase {
       's', 
       't'
     );
-    $this->assertEquals($bytes, $string->getBytes());
+    $this->assertEquals($bytes, $this->object->getBytes());
   }
 
   public function test__toString() {
-    $rawString = 'This is a string!';
-    $string = new String($rawString);
-    $this->assertInternalType('string', $string->__toString());
-    $this->assertEquals($rawString, $string->__toString());
+    $this->assertInternalType('string', $this->object->__toString());
+    $this->assertEquals(self::TEST_STRING, $this->object->__toString());
   }
 
   public function testLpad() {
-    $rawString = 'This is a string!';
-    $string = new String($rawString);
-    $string->lpad(20, '€');
-    $this->assertEquals('€€€' . $rawString, $string->__toString());
+    $this->object->lpad(20, '€');
+    $this->assertEquals('€€€' . self::TEST_STRING, $this->object->__toString());
   }
 
   public function testRpad() {
-    $rawString = 'This is a string!';
-    $string = new String($rawString);
-    $string->rpad(20, '€');
-    $this->assertEquals($rawString . '€€€', $string->__toString());
+    $this->object->rpad(20, '€');
+    $this->assertEquals(self::TEST_STRING . '€€€', $this->object->__toString());
   }
   
-  public function testMpad() {
+  public function testMpadOdd() {    
+    //test with odd length of 17
+    $this->object->mpad(20, '€');
+    $this->assertEquals('€' . self::TEST_STRING . '€€', $this->object->__toString());
+  }
+  
+  public function testMpadEven() {
     //test with even length of 16
     $rawString = 'This is a string';
-    $string = new String($rawString);
-    $string->mpad(20, '€');
-    $this->assertEquals('€€' . $rawString . '€€', $string->__toString());
-    
-    //test with odd length of 17
-    $rawString = 'This is a string!';
-    $string = new String($rawString);
-    $string->mpad(20, '€');
-    $this->assertEquals('€' . $rawString . '€€', $string->__toString());
+    $this->object->setValue($rawString);
+    $this->object->mpad(20, '€');
+    $this->assertEquals('€€' . $rawString . '€€', $this->object->__toString());
   }
 
   public function testStartsWith() {
-    $string = new String('öäü€test');
-    $this->assertTrue($string->startsWith('öäü'));
+    $this->object->setValue('öäü€test');
+    $this->assertTrue($this->object->startsWith('öäü'));
   }
 
   public function testEndsWith() {
-    $string = new String('öäü€');
-    $this->assertTrue($string->endsWith('€'));
+    $this->object->setValue('öäü€');
+    $this->assertTrue($this->object->endsWith('€'));
   }
 
-  public function testDetectLineBreaks() {
-    $string = new String("This is a string\n with unix \nline breaks");
-    $this->assertEquals("\n", $string->detectLineBreaks());
-    
-    $string = new String("This is a string\r with mac \rline breaks");
-    $this->assertEquals("\r", $string->detectLineBreaks());
-    
-    $string = new String("This is a string\r\n with windows \r\nline breaks");
-    $this->assertEquals("\r\n", $string->detectLineBreaks());
+  public function testDetectLineBreaksUnix() {
+    $this->object->setValue("This is a string\n with unix \nline breaks");
+    $this->assertEquals("\n", $this->object->detectLineBreaks());
+  }
+  
+  public function testDetectLineBreaksMax() {
+    $this->object->setValue("This is a string\r with mac \rline breaks");
+    $this->assertEquals("\r", $this->object->detectLineBreaks());
+  }
+  
+  public function testDetectLineBreaksWin() {
+    $this->object->setValue("This is a string\r\n with windows \r\nline breaks");
+    $this->assertEquals("\r\n", $this->object->detectLineBreaks());
   }
 
-  public function testNormalizeLineBreaks() {
-    $string = new String("This is a string\n with unix \nline breaks");
-    $string->normalizeLineBreaks(String::LINE_ENDING_N);
-    $this->assertEquals("\n", $string->detectLineBreaks());
-    
-    $string = new String("This is a string\r with mac \rline breaks");
-    $string->normalizeLineBreaks(String::LINE_ENDING_R);
-    $this->assertEquals("\r", $string->detectLineBreaks());
-    
-    $string = new String("This is a string\r\n with windows \r\nline breaks");
-    $string->normalizeLineBreaks(String::LINE_ENDING_RN);
-    $this->assertEquals("\r\n", $string->detectLineBreaks());
+  public function testNormalizeLineBreaksUnix() {
+    $this->object->setValue("This is a string\n with unix \nline breaks");
+    $this->object->normalizeLineBreaks(String::LINE_ENDING_N);
+    $this->assertEquals("\n", $this->object->detectLineBreaks());
+  }
+   
+  public function testNormalizeLineBreaksMax() {
+    $this->object->setValue("This is a string\r with mac \rline breaks");
+    $this->object->normalizeLineBreaks(String::LINE_ENDING_R);
+    $this->assertEquals("\r", $this->object->detectLineBreaks());
+  }
+  
+  public function testNormalizeLineBreaksWin() {
+    $this->object->setValue("This is a string\r\n with windows \r\nline breaks");
+    $this->object->normalizeLineBreaks(String::LINE_ENDING_RN);
+    $this->assertEquals("\r\n", $this->object->detectLineBreaks());
   }
 
   public function testWordwrap() {
